@@ -7,7 +7,7 @@ from scoreboard import ScoreBoard
 from sys import exit
 import game_functions as gf
 
-
+# Entry of the game
 def run():
     # Initialize the game
     pygame.init()
@@ -28,19 +28,24 @@ def run():
         enemies.add(enemy)
     # Loading hero
     hero = Hero(screen, settings)
-    # Creating hero bullet list
+    # Creating hero bullet group
     hero_bullets = pygame.sprite.Group()
-    # Creating enemy bullet list
+    # Creating enemy bullet group
     enemy_bullets = pygame.sprite.Group()
-    # Game over flag, True if game is over
-    game_over = False
-
+    # Game start
     while True:
+        # Check game events
         gf.check_events(screen, hero, hero_bullets, settings)
+        # Updating enemies
         gf.update_enemies(screen, enemies, hero, hero_bullets, enemy_bullets, scoreboard, settings)
+        # Updating hero bullets
         gf.update_hero_bullets(screen, hero_bullets, enemies, scoreboard, settings)
+        # Updating enemy bullets
         gf.update_enemy_bullets(hero_bullets, enemy_bullets, hero, settings, enemies, scoreboard)
+        # Refresh screen
         gf.update_screen(screen, hero_bullets, enemy_bullets, enemies, background, hero, scoreboard, settings)
+        pygame.display.update()
+
 
 if __name__ == "__main__":
     run()

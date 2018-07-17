@@ -10,7 +10,6 @@ BG_START = 0
 def check_hit(body, bullet):
     if body.x < bullet.rect.centerx < body.x + body.image.get_width() and body.y < bullet.rect.centery < body.y + body.image.get_height():
         body.restart()
-        bullet.active = False
         return True
     return False
 
@@ -69,7 +68,7 @@ def check_key_up_events(hero):
 
 def hero_open_fire_auto(screen, hero, bullets, settings):
     if len(bullets) < settings.hero_bullets_limit:
-        bullets.append(Bullet(hero, settings))
+        bullets.add(Bullet(hero, settings))
 
 
 def hero_open_fire(screen, hero, bullets, settings):
@@ -79,7 +78,7 @@ def hero_open_fire(screen, hero, bullets, settings):
 
 def enemy_open_fire(screen, enemy, bullets, settings):
     if len(bullets) < settings.enemy_bullets_limit:
-        bullets.add(BulletEnemy(settings, enemy))
+        bullets.add(BulletEnemy(settings, enemy.get_pos()))
 
 
 def check_events(screen, hero, bullets, settings):
@@ -130,8 +129,9 @@ def update_enemy_bullets(hero_bullets, enemy_bullets, hero, settings, enemies, s
 def update_enemies(screen, enemies, hero, hero_bullets, enemy_bullets, scoreboard, settings):
     for enemy in enemies:
         enemy.update()
-        if random.random() > 0.9:
-            # enemy.fire(enemy_bullets)
+        ratio = random.random()
+        # Simulating weighted random
+        if ratio > 0.999:
             enemy_open_fire(screen, enemy, enemy_bullets, settings)
         if check_enemy_hero_crash(hero, enemy):
             restart_game(hero, hero_bullets, enemy_bullets, enemies, scoreboard, settings)
@@ -140,19 +140,19 @@ def update_enemies(screen, enemies, hero, hero_bullets, enemy_bullets, scoreboar
 def update_screen(screen, hero_bullets, enemy_bullets, enemies, image, hero, scoreboard, settings):
     # Render background
     background_scroll(screen, image, settings)
-    set_background_down(screen, image, settings)
     # Render hero
     hero.blitme()
     # Control system
-    hero.move_by_keyboard()
+    hero.move_by_mouse()
     # Render enemies
     for enemy in enemies:
         enemy.blitme(screen)
     # Render socre board
     scoreboard.blitme(screen)
-    # Render bullets
+    # Render hero bullets
     for bullet in hero_bullets:
         bullet.blitme(screen)
+    # Render enemy bullets
     for bullet in enemy_bullets:
         bullet.blitme(screen)
     # Refresh interface

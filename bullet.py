@@ -16,9 +16,3 @@ class Bullet(pygame.sprite.Sprite):
 
     def blitme(self, screen):
         screen.blit(self.image, (self.rect.centerx, self.rect.centery))
-
-    # def restart(self):
-    #     hero_X, hero_Y = self.hero.rect.centerx, self.hero.rect.centery
-    #     self.rect.centerx = hero_X - self.image.get_width()/2
-    #     self.rect.centery = hero_Y - self.image.get_height()/2
-    #     self.active = True

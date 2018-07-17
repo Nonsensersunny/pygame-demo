@@ -6,9 +6,9 @@ class Settings:
         self.screen_size = self.get_screen_size()
         self.hero_limit = 3
         self.enemy_limit = 5
-        self.enemy_point = 10
+        self.enemy_point = 100
         self.ship_speed_factor = 0.1
-        self.enemy_speed_factor = 0.2
+        self.enemy_speed_factor = 0.1
         self.hero_bullet_speed_factor = 0.1
         self.hero_bullets_limit = 10
         self.enemy_bullet_speed_factor = 0.1

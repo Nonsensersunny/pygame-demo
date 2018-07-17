@@ -11,12 +11,18 @@ class Enemy(pygame.sprite.Sprite):
         self.height_limit = settings.get_screen_size()[1]
 
         self.restart()
+        img_url = ["../pygame/images/enemy0.png",
+                   "../pygame/images/enemy1.png"]
+        current_img = random.choice(img_url)
         self.image = pygame.image.load(
-            "../pygame/images/enemy0.png").convert_alpha()
+            current_img).convert_alpha()
 
         self.rect = self.image.get_rect()
         self.rect.centerx = self.rect.left
         self.rect.centery = self.rect.bottom
+
+    def get_pos(self):
+        return (self.x, self.y)
 
     def update(self):
         if self.y < self.height_limit:
@@ -38,16 +44,6 @@ class Enemy(pygame.sprite.Sprite):
 
     def blitme(self, screen):
         screen.blit(self.image, (self.x, self.y))
-
-    # def explode(self, screen):
-    #     images = []
-    #     images.append("../pygame/images/enemy0.png")
-    #     images.append("../pygame/images/enemy0_down1.png")
-    #     images.append("../pygame/images/enemy0_down2.png")
-    #     images.append("../pygame/images/enemy0_down3.png")
-    #     images.append("../pygame/images/enemy0_down4.png")
-    #     for image in images:
-    #         screen.blit(pygame.image.load(image), screen)
 
     def restart(self):
         self.x = random.randint(10, self.width_limit-10)

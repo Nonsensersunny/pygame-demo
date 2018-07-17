@@ -9,6 +9,7 @@ class ScoreBoard:
     
     def add_curent_score(self, num):
         self.current_score += self.settings.enemy_point*num
+        # Adding difficulty
         if self.current_score % 1000 == 0:
             self.settings.speed_up()
 

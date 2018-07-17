@@ -7,10 +7,9 @@ class Bullet(pygame.sprite.Sprite):
         self.settings = settings
         self.image = pygame.image.load("../pygame/images/bullet-3.gif").convert_alpha()
         self.hero = hero
-        # self.active = True 
 
         self.rect = self.image.get_rect()
-        self.rect.centerx, self.rect.centery = hero.rect.centerx, hero.rect.top
+        self.rect.centerx, self.rect.centery = hero.rect.centerx-10, hero.rect.top
 
     def update(self):
         self.rect.centery -= self.settings.hero_bullet_speed_factor

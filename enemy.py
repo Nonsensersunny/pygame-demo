@@ -1,5 +1,6 @@
 import pygame
 import random
+from bullet_enemy import BulletEnemy
 
 
 class Enemy(pygame.sprite.Sprite):
@@ -29,6 +30,11 @@ class Enemy(pygame.sprite.Sprite):
                 self.move_left = -1
         else:
             self.restart()
+
+    def fire(self, bullets):
+        if len(bullets) < self.settings.enemy_bullets_limit:
+            bullet = BulletEnemy(self.settings, self.rect)
+            bullets.add(bullet)
 
     def blitme(self, screen):
         screen.blit(self.image, (self.x, self.y))

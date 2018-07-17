@@ -55,3 +55,5 @@ class Hero:
     def restart(self):
         self.rect.centerx = self.screen_rect.centerx
         self.rect.bottom = self.screen_rect.bottom
+        self.x = self.rect.centerx
+        self.y = self.rect.centery

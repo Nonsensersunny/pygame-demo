@@ -1,26 +1,42 @@
 import pygame
 from enemy import Enemy
 from bullet import Bullet
+from bullet_enemy import BulletEnemy
 import sys 
+import random
 
+BG_START = 0
 
-def check_hit(enemy, bullet, screen):
-    if enemy.rect.centerx < bullet.rect.centerx < enemy.rect.centery + enemy.image.get_width() and enemy.rect.centery < bullet.rect.centery < enemy.rect.centery + enemy.image.get_height():
-        # enemy.explode(screen)
-        enemy.restart()
+def check_hit(body, bullet):
+    if body.x < bullet.rect.centerx < body.x + body.image.get_width() and body.y < bullet.rect.centery < body.y + body.image.get_height():
+        body.restart()
         bullet.active = False
         return True
     return False
 
 
-def check_crash(hero, enemy):
-    if hero.rect.centerx + hero.image.get_width()*0.7 > enemy.rect.centerx and hero.rect.centerx + hero.image.get_width()*0.3 < enemy.rect.centerx + enemy.image.get_width() and hero.rect.centery + hero.image.get_height()*0.7 > enemy.rect.centery and hero.rect.centery + hero.image.get_height()*0.3 < enemy.rect.centery + enemy.image.get_height():
-        return True
+def check_enemy_hero_crash(hero, enemy):
+    if hero.rect.centerx - hero.image.get_width()/2 < enemy.x < hero.rect.centerx + hero.image.get_width()/2 and hero.rect.centery - hero.image.get_height()/2 < enemy.y < hero.rect.centery + hero.image.get_height()/2:
+        return True 
     return False
 
 
-def set_background(screen, image):
-    screen.blit(image, (0, 0))
+def set_background_up(screen, image, settings):
+    global BG_START
+    screen.blit(image, (0, BG_START - image.get_height()))
+
+
+def set_background_down(screen, image, settings):
+    global BG_START
+    screen.blit(image, (0, BG_START))
+    BG_START += settings.ship_speed_factor*2
+    if BG_START >= image.get_height():
+        BG_START = 0
+
+
+def background_scroll(screen, image, settings):
+    set_background_down(screen, image, settings)
+    set_background_up(screen, image, settings)
 
 
 def check_key_down_events(screen, hero, bullets, settings):
@@ -59,23 +75,11 @@ def hero_open_fire_auto(screen, hero, bullets, settings):
 def hero_open_fire(screen, hero, bullets, settings):
     if len(bullets) < settings.hero_bullets_limit:
         bullets.add(Bullet(hero, settings))
-    # print(len(bullets))
 
 
-def check_bullet_enemy_hit(enemies, bullets, scoreboard, settings):
-    collisions = pygame.sprite.groupcollide(bullets, enemies, True, True)
-    if collisions:
-        for i in collisions.values():
-            scoreboard.add_curent_score(len(i))
-            print("Hit!")
-    if len(enemies) == 0:
-        enemies.add(Enemy(settings))
-
-
-def check_hero_crash(hero, enemies):
-    if pygame.sprite.spritecollideany(hero, enemies):
-        return True 
-    return False
+def enemy_open_fire(screen, enemy, bullets, settings):
+    if len(bullets) < settings.enemy_bullets_limit:
+        bullets.add(BulletEnemy(settings, enemy))
 
 
 def check_events(screen, hero, bullets, settings):
@@ -89,41 +93,67 @@ def check_events(screen, hero, bullets, settings):
             check_key_up_events(hero)
 
 
-# def create_enemies(screen, enemies, settings, num):
-#     for i in range(num):
-#         enemy = Enemy(settings)
-#         enemies.add(enemy)
+def create_enemies(enemies, settings):
+    for i in range(settings.enemy_limit):
+        enemy = Enemy(settings)
+        enemies.add(enemy)
 
 
-def update_bullets(screen, bullets, enemies, scoreboard, settings):
-    bullets.update()
-    for bullet in bullets.copy():
+def restart_game(hero, hero_bullets, enemy_bullets, enemies, scoreboard, settings):
+    scoreboard.reset()
+    hero.restart()
+    hero_bullets.empty()
+    enemy_bullets.empty()
+    enemies.empty()
+    create_enemies(enemies, settings)
+
+
+def update_hero_bullets(screen, bullets, enemies, scoreboard, settings):
+    for bullet in bullets:
+        bullet.update()
         if bullet.rect.centery <= 0:
             bullets.remove(bullet)
-    check_bullet_enemy_hit(enemies, bullets, scoreboard, settings)
+        for enemy in enemies:
+            if check_hit(enemy, bullet):
+                scoreboard.add_curent_score(1)
 
 
-def update_enemies(screen, enemies, hero, scoreboard):
-    enemies.update()
+def update_enemy_bullets(hero_bullets, enemy_bullets, hero, settings, enemies, scoreboard):
+    for bullet in enemy_bullets:
+        bullet.update()
+        if bullet.rect.centery >= settings.screen_size[1]:
+            enemy_bullets.remove(bullet)
+            if check_hit(hero, bullet):
+                restart_game(hero, hero_bullets, enemy_bullets, enemies, scoreboard, settings)
+
+
+def update_enemies(screen, enemies, hero, hero_bullets, enemy_bullets, scoreboard, settings):
     for enemy in enemies:
         enemy.update()
-    if pygame.sprite.spritecollideany(hero, enemies):
-        # print("Hero hit enemy!")
-        scoreboard.reset()
-        hero.restart()
+        if random.random() > 0.9:
+            # enemy.fire(enemy_bullets)
+            enemy_open_fire(screen, enemy, enemy_bullets, settings)
+        if check_enemy_hero_crash(hero, enemy):
+            restart_game(hero, hero_bullets, enemy_bullets, enemies, scoreboard, settings)
 
 
-def update_screen(screen, bullets, enemies, image, hero, scoreboard, settings):
-    set_background(screen, image)
-    scoreboard.blitme(screen)
-    
-    for bullet in bullets:
-        bullet.blitme(screen)
-
+def update_screen(screen, hero_bullets, enemy_bullets, enemies, image, hero, scoreboard, settings):
+    # Render background
+    background_scroll(screen, image, settings)
+    set_background_down(screen, image, settings)
+    # Render hero
     hero.blitme()
+    # Control system
     hero.move_by_keyboard()
-    enemies.draw(screen)
+    # Render enemies
     for enemy in enemies:
         enemy.blitme(screen)
-    
+    # Render socre board
+    scoreboard.blitme(screen)
+    # Render bullets
+    for bullet in hero_bullets:
+        bullet.blitme(screen)
+    for bullet in enemy_bullets:
+        bullet.blitme(screen)
+    # Refresh interface
     pygame.display.flip()

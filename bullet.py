@@ -1,29 +1,25 @@
 import pygame
-from pygame.sprite import Sprite
-
-class Bullet(Sprite):
-
-	def __init__(self, setting, screen, ship):
-		super(Bullet, self).__init__()
-		self.screen = screen
-		self.image = pygame.image.load('images/bullet.png')
-		self.rect = self.image.get_rect()
-
-		# self.rect = pygame.Rect(0, 0, setting.bullet_width, setting.bullet_height)
-		self.rect.centerx, self.rect.centery = ship.rect.centerx, ship.rect.top
-		# self.color = setting.bullet_color
-		self.speed_factor = setting.bullet_speed_factor
-
-	def update(self):
-		self.rect.centery -= self.speed_factor
-
-	def draw_bullet(self):
-		# pygame.draw.rect(self.screen, self.color, self.rect)
-		self.screen.blit(self.image, self.rect)
 
 
+class Bullet(pygame.sprite.Sprite):
+    def __init__(self, hero, settings):
+        pygame.sprite.Sprite.__init__(self)
+        self.settings = settings
+        self.image = pygame.image.load("../pygame/images/bullet-3.gif").convert_alpha()
+        self.hero = hero
+        # self.active = True 
 
+        self.rect = self.image.get_rect()
+        self.rect.centerx, self.rect.centery = hero.rect.centerx, hero.rect.top
 
+    def update(self):
+        self.rect.centery -= self.settings.hero_bullet_speed_factor
 
+    def blitme(self, screen):
+        screen.blit(self.image, (self.rect.centerx, self.rect.centery))
 
-
+    # def restart(self):
+    #     hero_X, hero_Y = self.hero.rect.centerx, self.hero.rect.centery
+    #     self.rect.centerx = hero_X - self.image.get_width()/2
+    #     self.rect.centery = hero_Y - self.image.get_height()/2
+    #     self.active = True

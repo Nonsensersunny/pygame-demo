@@ -1,195 +1,129 @@
-import sys
 import pygame
+from enemy import Enemy
 from bullet import Bullet
-from alien import Alien
-from time import sleep
-from life import Life
-
-def check_key_down_events(setting, screen, ship, bullets, stats, aliens, lifes):
-	keys = pygame.key.get_pressed()
-	if keys[275] == 1:
-		ship.moving_right = True
-	if keys[276] == 1:
-		ship.moving_left = True
-	if keys[273] == 1:
-		ship.moving_up = True
-	if keys[274] == 1:
-		ship.moving_down = True
-	if keys[32] == 1:
-		fire_bullet(bullets, setting, screen, ship)
-	if keys[112] == 1:
-		start_game(stats, aliens, bullets, screen, setting, ship, lifes)
+import sys 
 
 
-def check_key_up_events(ship):
-	keys = pygame.key.get_pressed()
-	if keys[275] == 0:
-		ship.moving_right = False
-	if keys[276] == 0:
-		ship.moving_left = False
-	if keys[273] == 0:
-		ship.moving_up = False
-	if keys[274] == 0:
-		ship.moving_down = False
+def check_hit(enemy, bullet, screen):
+    if enemy.rect.centerx < bullet.rect.centerx < enemy.rect.centery + enemy.image.get_width() and enemy.rect.centery < bullet.rect.centery < enemy.rect.centery + enemy.image.get_height():
+        # enemy.explode(screen)
+        enemy.restart()
+        bullet.active = False
+        return True
+    return False
 
 
-def check_events(setting, screen, ship, bullets, stats, play_button, aliens, lifes):
-	# Respond to the events created by player
-	for event in pygame.event.get():
-		keys = pygame.key.get_pressed()
-		if keys[27] == 1 or event.type == pygame.QUIT:
-			sys.exit()
-		elif event.type == pygame.KEYDOWN:
-			check_key_down_events(setting, screen, ship, bullets, stats, aliens, lifes)
-		elif event.type == pygame.KEYUP:
-			check_key_up_events(ship)
-		elif event.type == pygame.MOUSEBUTTONDOWN:
-			mouse_x, mouse_y = pygame.mouse.get_pos()
-			check_play_button(stats, play_button, mouse_x, mouse_y, aliens, bullets, ship, setting, screen, lifes)
+def check_crash(hero, enemy):
+    if hero.rect.centerx + hero.image.get_width()*0.7 > enemy.rect.centerx and hero.rect.centerx + hero.image.get_width()*0.3 < enemy.rect.centerx + enemy.image.get_width() and hero.rect.centery + hero.image.get_height()*0.7 > enemy.rect.centery and hero.rect.centery + hero.image.get_height()*0.3 < enemy.rect.centery + enemy.image.get_height():
+        return True
+    return False
 
 
-def start_game(stats, aliens, bullets, screen, setting, ship, lifes):
-	setting.initialize_dynamic_settings()
-	pygame.mouse.set_visible(False)
-	stats.reset_stats()
-	stats.game_active = True
-	aliens.empty()
-	bullets.empty()
-	create_fleet(screen, aliens, setting)
-	create_life(screen, setting, lifes)
-	ship.center_ship()
+def set_background(screen, image):
+    screen.blit(image, (0, 0))
 
 
-def check_play_button(stats, play_button, mouse_x, mouse_y, aliens, bullets, ship, setting, screen, lifes):
-	button_clicked = play_button.rect.collidepoint(mouse_x, mouse_y)
-	if button_clicked and not stats.game_active:
-		start_game(stats, aliens, bullets, screen, setting, ship, lifes)
+def check_key_down_events(screen, hero, bullets, settings):
+    keys = pygame.key.get_pressed()
+    if keys[275] == 1:
+        hero.moving_right = True
+    if keys[276] == 1:
+        hero.moving_left = True
+    if keys[273] == 1:
+        hero.moving_up = True
+    if keys[274] == 1:
+        hero.moving_down = True
+    if keys[32] == 1:
+        hero_open_fire(screen, hero, bullets, settings)
+    if keys[112] == 1:
+        print("Start game")
 
 
-def update_screen(setting, screen, ship, bullets, aliens, play_button, stats, sb, lifes):
-	# Refresh the screen
-	screen.fill(setting.get_bg_color())
-	sb.draw_score()
-	sb.draw_high_score()
-	sb.draw_level()
-	for bullet in bullets:
-		bullet.draw_bullet()
-	# update_life(lifes)
-	ship.blitme()
-	aliens.draw(screen)
-	ship.update(setting)
-	if not stats.game_active:
-		play_button.draw_button()
-	pygame.display.flip()
+def check_key_up_events(hero):
+    keys = pygame.key.get_pressed()
+    if keys[275] == 0:
+        hero.moving_right = False
+    if keys[276] == 0:
+        hero.moving_left = False
+    if keys[273] == 0:
+        hero.moving_up = False
+    if keys[274] == 0:
+        hero.moving_down = False
 
 
-def update_bullets(bullets, aliens, screen, setting, stats, sb):
-	bullets.update()
-	for bullet in bullets.copy():
-		if bullet.rect.bottom < 0:
-			bullets.remove(bullet)
-	check_alien_bullet_collisions(bullets, aliens, screen, setting, stats, sb)
+def hero_open_fire_auto(screen, hero, bullets, settings):
+    if len(bullets) < settings.hero_bullets_limit:
+        bullets.append(Bullet(hero, settings))
 
 
-# 检查撞击元素
-def check_alien_bullet_collisions(bullets, aliens, screen, setting, stats, sb):
-	collisions = pygame.sprite.groupcollide(bullets, aliens, True, True)
-	if collisions:
-		for i in collisions.values():
-			stats.score += setting.alien_point*len(i)
-			if stats.score > setting.get_high_score():
-				setting.update_high_score(stats.score)
-			sb.prep_high_score()
-			sb.prep_score()
-	if len(aliens) == 0:
-		stats.level += 1
-		sb.prep_level()
-		bullets.empty()
-		setting.increase_speed()
-		create_fleet(screen, aliens, setting)
+def hero_open_fire(screen, hero, bullets, settings):
+    if len(bullets) < settings.hero_bullets_limit:
+        bullets.add(Bullet(hero, settings))
+    # print(len(bullets))
 
 
-def fire_bullet(bullets, setting, screen, ship):
-	if len(bullets) < setting.bullet_allowed:
-		new_bullet = Bullet(setting, screen, ship)
-		bullets.add(new_bullet)
+def check_bullet_enemy_hit(enemies, bullets, scoreboard, settings):
+    collisions = pygame.sprite.groupcollide(bullets, enemies, True, True)
+    if collisions:
+        for i in collisions.values():
+            scoreboard.add_curent_score(len(i))
+            print("Hit!")
+    if len(enemies) == 0:
+        enemies.add(Enemy(settings))
 
 
-def get_number_aliens_x(screen_width, alien_width):
-	available_spacex = screen_width - 2*alien_width
-	number_alienx = available_spacex/(alien_width*6/5)
-	return int(number_alienx)
+def check_hero_crash(hero, enemies):
+    if pygame.sprite.spritecollideany(hero, enemies):
+        return True 
+    return False
 
 
-def get_number_aliens_y(screen_height, alien_height):
-	available_spacey = screen_height - 3*alien_height
-	number_alieny = available_spacey/(alien_height*6/5)
-	alien_y = []
-	for i in range(int(number_alieny)):
-		alien_y.append(alien_height*(i*1.5 + 1))
-	return alien_y
+def check_events(screen, hero, bullets, settings):
+    for event in pygame.event.get():
+        keys = pygame.key.get_pressed()
+        if keys[27] == 1 or event.type == pygame.QUIT:
+            sys.exit()
+        elif event.type == pygame.KEYDOWN:
+            check_key_down_events(screen, hero, bullets, settings)
+        elif event.type == pygame.KEYUP:
+            check_key_up_events(hero)
 
 
-def create_alien(screen, aliens, number_x, number_y):
-	for i in range(number_x):
-		for j in number_y:
-			alien = Alien(screen)
-			alien.rect.centerx = alien.rect.width*(i*1.5 + 1)
-			alien.rect.centery = j
-			aliens.add(alien)
+# def create_enemies(screen, enemies, settings, num):
+#     for i in range(num):
+#         enemy = Enemy(settings)
+#         enemies.add(enemy)
 
 
-def create_life(screen, setting, lifes):
-	for i in range(setting.ship_limit):
-		life = Life(screen)
-		life.rect.centerx = life.rect.width*(i + 1)
-		life.rect.centery = 20
-		lifes.add(life)
+def update_bullets(screen, bullets, enemies, scoreboard, settings):
+    bullets.update()
+    for bullet in bullets.copy():
+        if bullet.rect.centery <= 0:
+            bullets.remove(bullet)
+    check_bullet_enemy_hit(enemies, bullets, scoreboard, settings)
 
 
-def update_life(lifes):
-	for life in lifes:
-		life.blitme()
+def update_enemies(screen, enemies, hero, scoreboard):
+    enemies.update()
+    for enemy in enemies:
+        enemy.update()
+    if pygame.sprite.spritecollideany(hero, enemies):
+        # print("Hero hit enemy!")
+        scoreboard.reset()
+        hero.restart()
 
 
-def create_fleet(screen, aliens, setting):
-	alien = Alien(screen)
-	alien_width, alien_height = alien.rect.width, alien.rect.height
-	screen_width, screen_height = setting.screen_size
-	number_alienx = get_number_aliens_x(screen_width, alien_width)
-	number_alieny = get_number_aliens_y(screen_height, alien_height)
-	create_alien(screen, aliens, number_alienx, number_alieny)
+def update_screen(screen, bullets, enemies, image, hero, scoreboard, settings):
+    set_background(screen, image)
+    scoreboard.blitme(screen)
+    
+    for bullet in bullets:
+        bullet.blitme(screen)
 
-
-def update_aliens(aliens, setting, ship, stats, bullets, screen, lifes):
-	for alien in aliens:
-		alien.update(setting)
-	if pygame.sprite.spritecollideany(ship, aliens) or check_aliens_bottom(aliens, setting, stats, bullets, screen, ship):
-		# print('Ship Hit!')
-		ship_hit(stats, aliens, bullets, screen, setting, ship, lifes)
-
-
-def ship_hit(stats, aliens, bullets, screen, setting, ship, lifes):
-	if stats.ships_left > 1:
-		stats.ships_left -= 1
-		aliens.empty()
-		bullets.empty()
-		# update_life(lifes)
-		create_fleet(screen, aliens, setting)
-		ship.center_ship()
-		sleep(0.5)
-	else:
-		stats.game_active = False
-		pygame.mouse.set_visible(True)
-
-
-def check_aliens_bottom(aliens, setting, stats, bullets, screen, ship):
-	screen_width, screen_height = setting.screen_size
-	for alien in aliens:
-		if alien.rect.bottom >= screen_height:
-			return True
-	return False
-
-
-def show_high_score(sb):
-	sb.draw_high_score()
+    hero.blitme()
+    hero.move_by_keyboard()
+    enemies.draw(screen)
+    for enemy in enemies:
+        enemy.blitme(screen)
+    
+    pygame.display.flip()

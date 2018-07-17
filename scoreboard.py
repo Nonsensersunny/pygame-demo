@@ -1,52 +1,25 @@
-import pygame.font
-
-class ScoreBoard():
-
-    def __init__(self, screen, setting, stats):
-        self.screen = screen
-        self.screen_rect = self.screen.get_rect()
-        self.setting = setting
-        self.stats = stats
-
-        self.text_color = (30, 30, 30)
-        self.font = pygame.font.SysFont(None, 48)
-
-        self.prep_score()
-        self.prep_high_score()
-        self.prep_level()
+import pygame 
 
 
-    def prep_score(self):
-        score_str = 'Score:' + str(int(self.stats.score))
-        self.score_img = self.font.render(score_str, True, self.text_color, self.setting.bg_color)
-        self.score_img_rect = self.score_img.get_rect()
-        self.score_img_rect.right = self.screen_rect.right - 20
-        self.score_img_rect.top = 20
+class ScoreBoard:
+    def __init__(self, settings):
+        self.settings = settings
+        self.current_score = 0
+        self.font = pygame.font.Font(None, 20)
+    
+    def add_curent_score(self, num):
+        self.current_score += self.settings.enemy_point*num
 
-
-    def prep_high_score(self):
-        high_score_str = 'Highest:' + str(self.setting.get_high_score())
-        self.high_score_img = self.font.render(high_score_str, True, self.text_color, self.setting.bg_color)
-        self.high_score_img_rect = self.high_score_img.get_rect()
-        self.high_score_img_rect.right = self.screen_rect.right - 20
-        self.high_score_img_rect.top = 50
-
-
-    def prep_level(self):
-        level_str = 'Level:' + str(self.stats.level)
-        self.level_img = self.font.render(level_str, True, self.text_color, self.setting.bg_color)
-        self.level_img_rect = self.level_img.get_rect()
-        self.level_img_rect.centerx =self.screen_rect.centerx
-        self.level_img_rect.top = 20
-
-
-    def draw_score(self):
-        self.screen.blit(self.score_img, self.score_img_rect)
-
-
-    def draw_high_score(self):
-        self.screen.blit(self.high_score_img, self.high_score_img_rect)
-
-
-    def draw_level(self):
-        self.screen.blit(self.level_img, self.level_img_rect)
+    def reset(self):
+        self.current_score = 0
+        self.settings.update_high_score(self.highest_score)
+    
+    def blitme(self, screen):
+        self.highest_score = max(self.current_score, self.settings.get_high_score())
+        # self.settings.update_high_score(highest_score)
+        current_score_text = self.font.render(
+            "Score: %d" % self.current_score, 1, (0, 0, 0))
+        high_score_text = self.font.render(
+            "Highest: %d" % self.highest_score, 1, (0, 0, 0))
+        screen.blit(current_score_text, (0, 0))
+        screen.blit(high_score_text, (0, 20))

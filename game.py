@@ -1,7 +1,5 @@
 import pygame
-from bullet import Bullet
-from enemy import Enemy
-from hero import Hero
+from plane import Hero
 from settings import Settings
 from scoreboard import ScoreBoard
 from sys import exit
@@ -22,10 +20,7 @@ def run():
     # Setting background
     background = pygame.image.load("../pygame/images/background.png").convert()
     # Creating enemies
-    enemies = pygame.sprite.Group()
-    for i in range(settings.enemy_limit):
-        enemy = Enemy(settings)
-        enemies.add(enemy)
+    enemies = pygame.sprite .Group()
     # Loading hero
     hero = Hero(screen, settings)
     # Creating hero bullet group
@@ -33,9 +28,9 @@ def run():
     # Creating enemy bullet group
     enemy_bullets = pygame.sprite.Group()
     # Game start
-    while True:
+    while True: 
         # Check game events
-        gf.check_events(screen, hero, hero_bullets, settings)
+        gf.check_events(hero, hero_bullets)
         # Updating enemies
         gf.update_enemies(screen, enemies, hero, hero_bullets, enemy_bullets, scoreboard, settings)
         # Updating hero bullets
@@ -44,7 +39,6 @@ def run():
         gf.update_enemy_bullets(hero_bullets, enemy_bullets, hero, settings, enemies, scoreboard)
         # Refresh screen
         gf.update_screen(screen, hero_bullets, enemy_bullets, enemies, background, hero, scoreboard, settings)
-        pygame.display.update()
 
 
 if __name__ == "__main__":
